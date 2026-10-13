@@ -1,0 +1,1117 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="固定費帳">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>くらしの固定費帳</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#EDF0F3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --font:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+  --num:"Barlow Semi Condensed","Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;
+  --bg:#EDF0F3;--surface:#FFFFFF;--ink:#17202B;--muted:#5A6573;--line:#D9DFE6;
+  --accent:#1D4ED8;--accent-ink:#FFFFFF;--danger:#C62828;
+  --meter-bg:#17202B;--meter-ink:#F3F6F9;--meter-tile:rgba(255,255,255,.09);--meter-red:#E5484D;
+  --c-elec:#C98A00;--c-gas:#2563EB;--c-water:#0891A1;--c-net:#7C4DDB;--c-sub:#C2367A;--c-other:#6B7684;
+  --up:#C2410C;--down:#15803D;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E131A;--surface:#171E27;--ink:#E6EBF1;--muted:#94A0AE;--line:#273140;
+    --accent:#6E95FF;--accent-ink:#0B1020;--danger:#FF6B6B;
+    --meter-bg:#06090D;--meter-ink:#EEF2F6;--meter-tile:rgba(255,255,255,.07);--meter-red:#FF5C61;
+    --c-elec:#F2B32B;--c-gas:#6C9BFF;--c-water:#2EC4D3;--c-net:#A788FF;--c-sub:#F06CA8;--c-other:#9AA5B2;
+    --up:#FB923C;--down:#4ADE80;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E131A;--surface:#171E27;--ink:#E6EBF1;--muted:#94A0AE;--line:#273140;
+  --accent:#6E95FF;--accent-ink:#0B1020;--danger:#FF6B6B;
+  --meter-bg:#06090D;--meter-ink:#EEF2F6;--meter-tile:rgba(255,255,255,.07);--meter-red:#FF5C61;
+  --c-elec:#F2B32B;--c-gas:#6C9BFF;--c-water:#2EC4D3;--c-net:#A788FF;--c-sub:#F06CA8;--c-other:#9AA5B2;
+  --up:#FB923C;--down:#4ADE80;color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:560px;margin:0 auto;padding:12px 16px calc(110px + env(safe-area-inset-bottom,0px))}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 14px}
+.brand{font-size:14px;font-weight:700;color:var(--muted);letter-spacing:.04em}
+.mnav{display:flex;align-items:center;gap:4px}
+.mnav b{font-size:17px;font-weight:700;min-width:7.2em;text-align:center}
+.iconbtn{width:40px;height:40px;border:0;border-radius:12px;background:transparent;display:grid;place-items:center}
+.iconbtn:hover{background:var(--surface)}
+.iconbtn:disabled{opacity:.3;cursor:default;background:transparent}
+
+/* meter */
+.meter{background:var(--meter-bg);color:var(--meter-ink);border-radius:20px;padding:18px 18px 16px}
+.meter-cap{font-size:13px;opacity:.7;margin:0 0 10px}
+.digits{display:flex;align-items:center;flex-wrap:wrap;gap:4px;font-family:var(--num);font-variant-numeric:tabular-nums}
+.yen{font-size:24px;font-weight:500;margin-right:6px;opacity:.8}
+.d{display:inline-grid;place-items:center;width:1.02em;height:1.36em;border-radius:7px;background:var(--meter-tile);font-size:clamp(32px,10.5vw,46px);font-weight:600;line-height:1;box-shadow:inset 0 -1px 0 rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
+.d.red{background:var(--meter-red);color:#fff}
+.sep{font-size:28px;opacity:.45;width:.28em;text-align:center;align-self:flex-end;padding-bottom:4px}
+.cmps{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.cmp{display:flex;flex-direction:column;gap:1px}
+.cmp-l{font-size:12px;opacity:.65}
+.cmp-v{font-family:var(--num);font-size:21px;font-weight:600;font-variant-numeric:tabular-nums}
+.cmp-v.up{color:#FFA36B}.cmp-v.down{color:#7BE3A0}.cmp-v.none{font-family:var(--font);font-size:14px;font-weight:500;opacity:.6;padding-top:4px}
+.cmp-p{font-size:12px;opacity:.7;font-variant-numeric:tabular-nums}
+
+/* sections */
+.sec{margin-top:26px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 10px}
+.sec-h h2{font-size:15px;font-weight:700;margin:0}
+.sec-h .sub{font-size:13px;color:var(--muted)}
+.panel{background:var(--surface);border-radius:16px;padding:4px 14px}
+
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line);gap:2px}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.legend b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+.row{display:flex;align-items:center;gap:12px;width:100%;padding:12px 0;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left}
+.panel .row:last-child{border-bottom:0}
+.row-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.row-t{font-weight:500;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.row-s{font-size:13px;color:var(--muted)}
+.row-amt{font-family:var(--num);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row.off{opacity:.55}
+.tag{font-size:11px;font-weight:500;padding:1px 7px;border-radius:999px;background:var(--bg);color:var(--muted)}
+
+.ic{color:var(--c);position:relative;width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center}
+.ic::before{content:"";position:absolute;inset:0;border-radius:inherit;background:currentColor;opacity:.13}
+.ic svg{position:relative}
+
+.todo{display:flex;flex-wrap:wrap;gap:8px}
+.todo button{display:inline-flex;align-items:center;gap:8px;border:1.5px dashed var(--line);background:var(--surface);border-radius:12px;padding:8px 12px 8px 8px;font-weight:500}
+.todo .ic{width:28px;height:28px;border-radius:8px}
+.todo button:hover{border-color:var(--accent)}
+
+.empty{text-align:center;padding:28px 16px;color:var(--muted)}
+.empty p{margin:0 0 14px}
+.hero-empty{background:var(--surface);border-radius:20px;padding:28px 20px;margin-top:8px}
+.hero-empty h1{font-size:21px;margin:0 0 8px;line-height:1.45}
+.hero-empty p{color:var(--muted);margin:0 0 20px}
+.stack{display:flex;flex-direction:column;gap:10px}
+
+.banner{background:#FFF4D6;color:#5C4200;border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:12px}
+.tip{font-size:13px;color:var(--muted);margin:10px 2px 0;line-height:1.7}
+
+/* buttons */
+.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:700;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:var(--bg);color:var(--ink)}
+.btn.danger{background:transparent;color:var(--danger);padding-left:6px;padding-right:6px;margin-right:auto}
+.btn.wide{width:100%}
+.btn.small{min-height:36px;padding:6px 12px;font-size:14px;border-radius:10px}
+.btn:active{transform:translateY(1px)}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr auto 1fr 1fr;align-items:center}
+.tab{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);padding:6px 0}
+.tab[aria-current="page"]{color:var(--ink);font-weight:700}
+.rec-btn{border:0;background:var(--accent);color:var(--accent-ink);border-radius:50%;width:62px;height:62px;margin:-18px 6px 0;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 8px 18px -8px var(--accent)}
+
+/* sheet */
+.sheet-wrap{position:fixed;inset:0;z-index:50;background:rgba(8,12,18,.5);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:calc(100% - 24px - env(safe-area-inset-top,0px));overflow:auto;-webkit-overflow-scrolling:touch;border-radius:22px 22px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+@media (min-width:700px){.sheet-wrap{align-items:center}.sheet{border-radius:22px}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet h2{font-size:19px;margin:0 0 16px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.field>span{font-size:13px;font-weight:500;color:var(--muted)}
+.field input,.field select{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);font-size:16px}
+.field input:focus,.field select:focus{border-color:var(--accent);outline:none}
+.money{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding-left:14px;background:var(--surface)}
+.money:focus-within{border-color:var(--accent)}
+.money span{font-family:var(--num);font-weight:600;color:var(--muted)}
+.money input{border:0!important;min-height:48px}
+.money.big span{font-size:26px}
+.money.big input{font-family:var(--num);font-size:34px;font-weight:600;min-height:62px;font-variant-numeric:tabular-nums}
+.unit-in{display:flex;align-items:center;gap:8px}
+.unit-in span{color:var(--muted);min-width:2.5em}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.pick{border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;font-weight:500;line-height:1.3;text-align:center}
+.pick.on{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset}
+.svc-fixed{display:flex;align-items:center;gap:10px;font-weight:700;margin-bottom:16px}
+.hint{font-size:14px;color:var(--muted);margin:-6px 0 14px;min-height:1px}
+.hint b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.note{font-size:13px;background:var(--bg);border-radius:10px;padding:10px 12px;margin:0 0 16px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip input,.seg input{position:absolute;opacity:0;pointer-events:none}
+.chip span{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--line);border-radius:999px;padding:7px 12px;font-size:14px;cursor:pointer}
+.chip input:checked+span{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.chip input:focus-visible+span,.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;flex-direction:column;gap:6px}
+.seg span{display:block;border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;font-size:15px;cursor:pointer}
+.seg input:checked+span{border-color:var(--accent);box-shadow:0 0 0 1.5px var(--accent) inset;font-weight:700}
+.switch{display:flex;align-items:center;gap:12px;margin-bottom:16px;font-size:15px;cursor:pointer}
+.switch input{appearance:none;-webkit-appearance:none;width:46px;height:28px;border-radius:999px;background:var(--line);position:relative;flex:none;cursor:pointer;transition:background .15s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{transform:translateX(18px)}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
+
+/* confirm & toast */
+.confirm-wrap{position:fixed;inset:0;z-index:70;background:rgba(8,12,18,.55);display:grid;place-items:center;padding:24px}
+.confirm{background:var(--surface);border-radius:18px;padding:20px;max-width:360px;width:100%}
+.confirm p{margin:0 0 18px;line-height:1.7}
+.confirm .actions .btn{flex:1}
+.confirm .btn.danger-fill{background:var(--danger);color:#fff}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap}
+#toast.show{opacity:1}
+
+.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--surface);border-radius:14px;padding:12px 14px}
+.stat span{display:block;font-size:12px;color:var(--muted)}
+.stat b{font-family:var(--num);font-size:24px;font-weight:600}
+
+/* analysis */
+body[data-tab="ana"] .wrap{max-width:1120px}
+.ana-grid{display:grid;gap:14px}
+@media (min-width:900px){.ana-grid{grid-template-columns:1fr 1fr}.span2{grid-column:1/-1}}
+.card{background:var(--surface);border-radius:16px;padding:16px;min-width:0}
+.card h3{font-size:15px;margin:0 0 4px}
+.card .cap{font-size:13px;color:var(--muted);margin:0 0 12px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (min-width:900px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--surface);border-radius:14px;padding:12px 14px}
+.kpi span{display:block;font-size:12px;color:var(--muted)}
+.kpi b{display:block;font-family:var(--num);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.3}
+.kpi small{font-size:12px;color:var(--muted)}
+.kpi small.up{color:var(--up)}.kpi small.down{color:var(--down)}
+svg.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--muted);font-size:11px;font-family:var(--num)}
+.chart .axsel{fill:var(--ink);font-weight:600}
+.chart .hit{fill:transparent}
+.chart .bar-g{cursor:pointer}
+.chart .bar-g.sel .hit{fill:var(--accent);opacity:.09}
+.chart .ly{fill:none;stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 4;opacity:.5}
+.chart .lyd{fill:var(--surface);stroke:var(--ink);stroke-width:1.5;opacity:.6}
+.chart .pl{fill:none;stroke:var(--accent);stroke-width:2.2}
+.chart .pld{fill:var(--surface);stroke:var(--accent);stroke-width:2}
+.chart-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:8px}
+.chart-legend span{display:inline-flex;align-items:center;gap:6px}
+.ln{width:18px;height:0;border-top:2px dashed var(--ink);opacity:.5;display:inline-block}
+.ln.solid{border-top:2px solid var(--accent);opacity:1}
+.mini{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.mini td,.mini th{padding:8px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.mini td:first-child,.mini th:first-child{text-align:left;white-space:normal}
+.mini th{font-size:12px;font-weight:500;color:var(--muted)}
+.mini tr:last-child td{border-bottom:0}
+.mini tfoot td{font-weight:700;border-top:1.5px solid var(--ink);border-bottom:0}
+.mini .up{color:var(--up)}.mini .down{color:var(--down)}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.mx{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mx th,.mx td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line)}
+.mx th{font-weight:500;color:var(--muted);font-size:12px}
+.mx th:first-child,.mx td:first-child{text-align:left;position:sticky;left:0;background:var(--surface)}
+.mx tr.sum td{font-weight:700;border-bottom:0}
+.mx td.zero{color:var(--muted)}
+.inline-fields{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.inline-fields input,.inline-fields select{min-height:42px;border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--surface);font-size:16px}
+.inline-fields .vs{color:var(--muted);font-size:13px}
+.period{display:flex;align-items:center;gap:4px}
+.period b{font-size:15px;font-weight:700;text-align:center;min-width:12em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="banner"></div>
+  <main id="view"></main>
+</div>
+
+<nav class="tabs" aria-label="メインメニュー">
+  <div class="tabs-in">
+    <button class="tab" data-act="tab" data-tab="home">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7"/><path d="M5.5 9.5V20h13V9.5"/></svg>
+      ホーム
+    </button>
+    <button class="tab" data-act="tab" data-tab="ana">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6.5 16v-5M11.5 16V5M16.5 16V9"/></svg>
+      分析
+    </button>
+    <button class="rec-btn" data-act="add" aria-label="料金を記録する">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      記録
+    </button>
+    <button class="tab" data-act="tab" data-tab="manage">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg>
+      サービス
+    </button>
+    <button class="tab" data-act="tab" data-tab="data">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="m7.5 10 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></svg>
+      データ
+    </button>
+  </div>
+</nav>
+
+<div id="sheetWrap" class="sheet-wrap" hidden>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+</div>
+<div id="confirmWrap" class="confirm-wrap" hidden>
+  <div class="confirm" role="alertdialog" aria-modal="true">
+    <p id="confirmMsg"></p>
+    <div class="actions">
+      <button class="btn ghost" id="confirmNo">キャンセル</button>
+      <button class="btn primary" id="confirmYes">OK</button>
+    </div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- master data ---------- */
+const CATS = {
+  elec:  {label:'電気',    unit:'kWh', icon:'<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z"/>'},
+  gas:   {label:'ガス',    unit:'㎥',  icon:'<path d="M12 22a6.5 6.5 0 0 0 6.5-6.5C18.5 10 13 7.5 12 2c-.8 3.6-3 5-3 8 0 1.3.6 2.3 1.5 2.8-.9-.2-2.2-.8-3-1.8-1.2 1.6-2 3.4-2 5.5A6.5 6.5 0 0 0 12 22z"/>'},
+  water: {label:'水道',    unit:'㎥',  icon:'<path d="M12 3s6.5 7.2 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 10.2 12 3 12 3z"/>'},
+  net:   {label:'通信',    unit:'',    icon:'<path d="M5 19v-3M10 19v-6M15 19v-9M20 19V6"/>'},
+  sub:   {label:'サブスク', unit:'',    icon:'<path d="M17 3l3 3-3 3"/><path d="M4 12V9a3 3 0 0 1 3-3h13"/><path d="M7 21l-3-3 3-3"/><path d="M20 12v3a3 3 0 0 1-3 3H4"/>'},
+  other: {label:'その他',  unit:'',    icon:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'}
+};
+const CAT_ORDER = ['elec','gas','water','net','sub','other'];
+const UNITS = ['kWh','㎥','GB',''];
+const BILLING = {variable:'毎回金額が変わる（電気・ガスなど）', monthly:'毎月決まった額（サブスクなど）', yearly:'年に1回払う（年額プラン）'};
+const PRESETS = [
+  {name:'電気', cat:'elec', unit:'kWh'},
+  {name:'ガス', cat:'gas', unit:'㎥'},
+  {name:'水道', cat:'water', unit:'㎥', bimonthly:true},
+  {name:'携帯電話', cat:'net', unit:''},
+  {name:'インターネット回線', cat:'net', unit:''}
+];
+
+/* ---------- utils ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const pad = n => String(n).padStart(2, '0');
+const MONTH_RE = /^\d{4}-\d{2}$/;
+const curMonth = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1); };
+const addM = (m, n) => { let [y, mo] = m.split('-').map(Number); const t = y * 12 + (mo - 1) + n; return Math.floor(t / 12) + '-' + pad(t % 12 + 1); };
+const mLabel = m => { const [y, mo] = m.split('-'); return `${y}年${Number(mo)}月`; };
+const yen = n => '¥' + Math.round(n).toLocaleString('ja-JP');
+const num = n => Number(n).toLocaleString('ja-JP', {maximumFractionDigits: 1});
+const sumA = rs => rs.reduce((a, r) => a + (Number(r.amount) || 0), 0);
+const svg = (cat, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(CATS[cat] || CATS.other).icon}</svg>`;
+const ic = (cat, size) => `<span class="ic" style="--c:var(--c-${CATS[cat] ? cat : 'other'})">${svg(cat, size)}</span>`;
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`; };
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function askConfirm(msg, okLabel = 'OK', danger = false) {
+  return new Promise(res => {
+    const w = $('#confirmWrap'), yes = $('#confirmYes'), no = $('#confirmNo');
+    $('#confirmMsg').textContent = msg;
+    yes.textContent = okLabel;
+    yes.className = 'btn ' + (danger ? 'danger-fill' : 'primary');
+    w.hidden = false; no.focus();
+    const done = v => { w.hidden = true; yes.onclick = no.onclick = null; res(v); };
+    yes.onclick = () => done(true); no.onclick = () => done(false);
+  });
+}
+
+/* ---------- storage (IndexedDB) ---------- */
+let idb = null, memOnly = false;
+function openDB() {
+  return new Promise((res, rej) => {
+    let r;
+    try { r = indexedDB.open('kurashi-koteihi', 1); } catch (e) { return rej(e); }
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      if (!d.objectStoreNames.contains('services')) d.createObjectStore('services', {keyPath: 'id'});
+      if (!d.objectStoreNames.contains('records')) d.createObjectStore('records', {keyPath: 'id'});
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+    r.onblocked = () => rej(new Error('blocked'));
+  });
+}
+function run(store, mode, fn) {
+  if (memOnly || !idb) return Promise.resolve(undefined);
+  return new Promise((res, rej) => {
+    const t = idb.transaction(store, mode);
+    const out = fn(t.objectStore(store));
+    t.oncomplete = () => res(out && 'result' in out ? out.result : undefined);
+    t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+  });
+}
+const dbGetAll = st => run(st, 'readonly', s => s.getAll()).then(r => r || []);
+const dbPut = (st, objs) => run(st, 'readwrite', s => { objs.forEach(o => s.put(o)); });
+const dbDel = (st, ids) => run(st, 'readwrite', s => { ids.forEach(i => s.delete(i)); });
+const dbClear = st => run(st, 'readwrite', s => { s.clear(); });
+
+/* ---------- state ---------- */
+const state = {services: [], records: [], tab: 'home', month: curMonth(), anaEnd: curMonth(), anaSel: curMonth(), anaSvc: null, cmpA: null, cmpB: null};
+const svc = id => state.services.find(s => s.id === id);
+const recsOf = m => state.records.filter(r => r.month === m && svc(r.serviceId));
+
+function upsert(arr, list) { list.forEach(o => { const i = arr.findIndex(x => x.id === o.id); if (i >= 0) arr[i] = o; else arr.push(o); }); }
+async function saveServices(list) { list = [].concat(list); upsert(state.services, list); await dbPut('services', list); }
+async function saveRecords(list) { list = [].concat(list); upsert(state.records, list); await dbPut('records', list); }
+async function removeRecords(ids) { ids = [].concat(ids); state.records = state.records.filter(r => !ids.includes(r.id)); await dbDel('records', ids); }
+async function removeService(id) {
+  const ids = state.records.filter(r => r.serviceId === id).map(r => r.id);
+  state.services = state.services.filter(s => s.id !== id);
+  await dbDel('services', [id]); if (ids.length) await removeRecords(ids);
+}
+
+/* fixed-cost services are recorded automatically every month */
+const autoAmount = s => s.billing === 'monthly' ? Math.round(s.fixedAmount) : Math.round(s.fixedAmount / 12);
+async function syncAuto() {
+  const now = curMonth(), add = [], upd = [], del = [];
+  for (const s of state.services) {
+    const mine = state.records.filter(r => r.serviceId === s.id && r.auto);
+    if (s.billing === 'variable') { del.push(...mine.map(r => r.id)); continue; }
+    const start = MONTH_RE.test(s.startMonth || '') ? s.startMonth : now;
+    let end = (!s.active && MONTH_RE.test(s.endMonth || '')) ? s.endMonth : now;
+    if (end > now) end = now;
+    for (const r of mine) {
+      if (r.month < start || r.month > end) del.push(r.id);
+      else if (r.month >= now && r.amount !== autoAmount(s)) upd.push({...r, amount: autoAmount(s)});
+    }
+    let guard = 0;
+    for (let m = start; m <= end && guard < 600; m = addM(m, 1), guard++) {
+      if (!state.records.some(r => r.serviceId === s.id && r.month === m))
+        add.push({id: uid(), serviceId: s.id, month: m, amount: autoAmount(s), usage: null, memo: '', auto: true, group: null});
+    }
+  }
+  if (del.length) await removeRecords(del);
+  if (add.length || upd.length) await saveRecords([...add, ...upd]);
+}
+
+/* ---------- views ---------- */
+function render() {
+  document.querySelectorAll('.tab').forEach(b => { if (b.dataset.tab === state.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  $('#banner').innerHTML = memOnly ? '<div class="banner">この環境ではデータを保存できません。ページを閉じると入力内容は消えます。</div>' : '';
+  document.body.dataset.tab = state.tab;
+  lastNarrow = isNarrow();
+  $('#view').innerHTML = state.tab === 'home' ? viewHome() : state.tab === 'ana' ? viewAna() : state.tab === 'data' ? viewData() : viewManage();
+}
+
+function meter(total) {
+  const chars = [...Math.round(total).toLocaleString('ja-JP')];
+  const last = chars.length - 1;
+  const html = chars.map((c, i) => c === ',' ? '<span class="sep">,</span>' : `<span class="d${i === last ? ' red' : ''}">${c}</span>`).join('');
+  return `<div class="digits" role="img" aria-label="合計 ${yen(total)}"><span class="yen">¥</span>${html}</div>`;
+}
+
+function cmpCell(label, cur, base, has) {
+  if (!has) return `<div class="cmp"><span class="cmp-l">${label}</span><span class="cmp-v none">記録なし</span></div>`;
+  const d = cur - base, cls = d > 0 ? 'up' : d < 0 ? 'down' : '';
+  const sign = d > 0 ? '+' : d < 0 ? '−' : '±';
+  const pct = base ? `${d > 0 ? '+' : d < 0 ? '−' : ''}${Math.abs(d / base * 100).toFixed(1)}%` : '';
+  return `<div class="cmp"><span class="cmp-l">${label}</span><span class="cmp-v ${cls}">${sign}${yen(Math.abs(d))}</span><span class="cmp-p">${pct}</span></div>`;
+}
+
+function nextRenew(s) {
+  if (!s.renewDate) return null;
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const d = new Date(s.renewDate + 'T00:00:00'); if (isNaN(d)) return null;
+  while (d < t) d.setFullYear(d.getFullYear() + 1);
+  return d;
+}
+
+function header(title, withMonth) {
+  const now = curMonth();
+  return `<header class="top"><span class="brand">${title}</span>${withMonth ? `
+    <div class="mnav">
+      <button class="iconbtn" data-act="mprev" aria-label="前の月"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
+      <b>${mLabel(state.month)}</b>
+      <button class="iconbtn" data-act="mnext" aria-label="次の月" ${state.month >= now ? 'disabled' : ''}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button>
+    </div>` : ''}</header>`;
+}
+
+function viewHome() {
+  if (!state.services.length) {
+    return header('くらしの固定費帳', false) + `
+    <section class="hero-empty">
+      <h1>毎月払っているものを登録して、記録を始めましょう</h1>
+      <p>電気・ガス・水道などは届いた金額を入力し、サブスクは一度登録すれば毎月自動で記録されます。</p>
+      <div class="stack">
+        <button class="btn primary wide" data-act="presets">電気・ガス・水道・携帯・ネット回線をまとめて追加</button>
+        <button class="btn ghost wide" data-act="new-svc">ひとつずつ追加する</button>
+      </div>
+    </section>`;
+  }
+  const m = state.month, now = curMonth();
+  const rs = recsOf(m), total = sumA(rs);
+  const prs = recsOf(addM(m, -1)), yrs = recsOf(addM(m, -12));
+
+  const byCat = {};
+  rs.forEach(r => { const c = svc(r.serviceId).cat; byCat[c] = (byCat[c] || 0) + r.amount; });
+  const cats = CAT_ORDER.filter(c => byCat[c] > 0);
+
+  const missing = m <= now ? state.services.filter(s => s.billing === 'variable' && s.active && (s.startMonth || '0000-00') <= m && !rs.some(r => r.serviceId === s.id)) : [];
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const soon = m === now ? state.services.filter(s => s.active && s.billing === 'yearly')
+    .map(s => ({s, d: nextRenew(s)})).filter(x => x.d && (x.d - today) / 864e5 <= 45).sort((a, b) => a.d - b.d) : [];
+
+  const sorted = rs.slice().sort((a, b) => {
+    const sa = svc(a.serviceId), sb = svc(b.serviceId);
+    return CAT_ORDER.indexOf(sa.cat) - CAT_ORDER.indexOf(sb.cat) || sa.name.localeCompare(sb.name, 'ja');
+  });
+
+  return header('くらしの固定費帳', true) + `
+  <section class="meter">
+    <p class="meter-cap">${mLabel(m)}の合計</p>
+    ${meter(total)}
+    <div class="cmps">
+      ${cmpCell('前月比', total, sumA(prs), prs.length > 0)}
+      ${cmpCell('前年同月比', total, sumA(yrs), yrs.length > 0)}
+    </div>
+  </section>
+
+  ${missing.length ? `
+  <section class="sec">
+    <div class="sec-h"><h2>まだ入力していない料金</h2><span class="sub">${missing.length}件</span></div>
+    <div class="todo">${missing.map(s => `<button data-act="add" data-svc="${s.id}">${ic(s.cat, 16)}${esc(s.name)}</button>`).join('')}</div>
+  </section>` : ''}
+
+  ${soon.length ? `
+  <section class="sec">
+    <div class="sec-h"><h2>更新が近い年額プラン</h2></div>
+    <div class="panel">${soon.map(({s, d}) => `
+      <button class="row" data-act="edit-svc" data-id="${s.id}">${ic(s.cat)}
+        <span class="row-main"><span class="row-t">${esc(s.name)}</span><span class="row-s">${d.getMonth() + 1}月${d.getDate()}日に更新（あと${Math.round((d - today) / 864e5)}日）</span></span>
+        <span class="row-amt">${yen(s.fixedAmount)}</span></button>`).join('')}</div>
+  </section>` : ''}
+
+  ${cats.length ? `
+  <section class="sec">
+    <div class="sec-h"><h2>内訳</h2></div>
+    <div class="bar" aria-hidden="true">${cats.map(c => `<i style="width:${byCat[c] / total * 100}%;background:var(--c-${c})"></i>`).join('')}</div>
+    <div class="legend">${cats.map(c => `<span><i class="dot" style="background:var(--c-${c})"></i>${CATS[c].label}<b>${yen(byCat[c])}</b></span>`).join('')}</div>
+  </section>` : ''}
+
+  <section class="sec">
+    <div class="sec-h"><h2>明細</h2><span class="sub">${rs.length}件</span></div>
+    ${sorted.length ? `<div class="panel">${sorted.map(r => {
+      const s = svc(r.serviceId);
+      return `<button class="row" data-act="edit-rec" data-id="${r.id}">${ic(s.cat)}
+        <span class="row-main"><span class="row-t">${esc(s.name)}${r.auto ? '<span class="tag">自動</span>' : ''}${r.group ? '<span class="tag">2か月分を按分</span>' : ''}</span>
+        <span class="row-s">${r.usage != null && s.unit ? `${num(r.usage)} ${esc(s.unit)}` : (s.billing === 'yearly' && r.auto ? '年額の月割り' : (CATS[s.cat].label !== s.name ? CATS[s.cat].label : ''))}${r.memo ? `／${esc(r.memo)}` : ''}</span></span>
+        <span class="row-amt">${yen(r.amount)}</span></button>`;
+    }).join('')}</div>` : `<div class="empty panel"><p>${mLabel(m)}の記録はまだありません</p><button class="btn primary" data-act="add">記録する</button></div>`}
+  </section>`;
+}
+
+function svcSub(s) {
+  if (s.billing === 'monthly') return `毎月 ${yen(s.fixedAmount)}`;
+  if (s.billing === 'yearly') {
+    const d = nextRenew(s);
+    return `年額 ${yen(s.fixedAmount)}（月あたり ${yen(s.fixedAmount / 12)}）${d ? `／更新 ${d.getMonth() + 1}月${d.getDate()}日` : ''}`;
+  }
+  return `毎回入力${s.unit ? `／${esc(s.unit)}` : ''}${s.bimonthly ? '／2か月ごとの請求' : ''}`;
+}
+
+function viewManage() {
+  const groups = [
+    ['毎回入力するもの', state.services.filter(s => s.billing === 'variable')],
+    ['自動で記録される固定費', state.services.filter(s => s.billing !== 'variable')]
+  ];
+  const sortS = arr => arr.slice().sort((a, b) => (b.active - a.active) || CAT_ORDER.indexOf(a.cat) - CAT_ORDER.indexOf(b.cat) || a.name.localeCompare(b.name, 'ja'));
+  const subTotal = state.services.filter(s => s.active && s.billing !== 'variable').reduce((a, s) => a + autoAmount(s), 0);
+  return header('サービス', false) + `
+  <section>
+    <div class="sec-h"><h2>サービス</h2><button class="btn ghost small" data-act="new-svc">＋ 追加</button></div>
+    ${state.services.length ? groups.filter(g => g[1].length).map(([title, list]) => `
+      <div class="sec-h" style="margin-top:14px"><span class="sub">${title}</span>${title.startsWith('自動') ? `<span class="sub">月あたり ${yen(subTotal)}</span>` : ''}</div>
+      <div class="panel">${sortS(list).map(s => `
+        <button class="row ${s.active ? '' : 'off'}" data-act="edit-svc" data-id="${s.id}">${ic(s.cat)}
+          <span class="row-main"><span class="row-t">${esc(s.name)}${s.active ? '' : '<span class="tag">解約済み</span>'}</span><span class="row-s">${svcSub(s)}</span></span>
+        </button>`).join('')}</div>`).join('')
+    : `<div class="empty panel"><p>まだサービスがありません</p><button class="btn primary" data-act="presets">よく使う5件をまとめて追加</button></div>`}
+  </section>`;
+}
+
+function viewData() {
+  const lastExport = lsGet('koteihi:lastExport');
+  const standalone = (window.navigator.standalone === true) || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  return header('データ', false) + `
+  <section>
+    <div class="data-grid">
+      <div class="stat"><span>サービス</span><b>${state.services.length}</b></div>
+      <div class="stat"><span>記録</span><b>${state.records.length}</b></div>
+    </div>
+    <div class="stack" style="margin-top:12px">
+      <button class="btn primary wide" data-act="export">データを書き出す</button>
+      <button class="btn ghost wide" data-act="import">データを読み込む</button>
+    </div>
+    <p class="tip">書き出したファイルは、iPhoneの共有シートからAirDropでMacに送れます。Macでは同じページを開いて「データを読み込む」を押してください。読み込むと、その端末のデータは置き換わります。${lastExport ? `<br>前回の書き出し：${esc(lastExport)}` : ''}</p>
+    ${standalone ? '' : '<p class="tip">iPhoneでは、Safariの共有メニューから「ホーム画面に追加」して使うと、データが消えにくくなります。</p>'}
+  </section>`;
+}
+
+/* ---------- analysis ---------- */
+let lastNarrow = true;
+const isNarrow = () => window.innerWidth < 700;
+const shortYen = n => n >= 10000 ? (Math.round(n / 1000) / 10).toLocaleString('ja-JP') + '万' : Math.round(n).toLocaleString('ja-JP');
+function niceStep(x) {
+  if (!(x > 0)) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(x))), f = x / p;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+}
+const monthsTo = (end, n) => Array.from({length: n}, (_, i) => addM(end, i - n + 1));
+function catTotals(m) { const o = {}; recsOf(m).forEach(r => { const c = svc(r.serviceId).cat; o[c] = (o[c] || 0) + r.amount; }); return o; }
+const pctTxt = (cur, base) => base ? `${cur >= base ? '+' : '−'}${Math.abs((cur - base) / base * 100).toFixed(1)}%` : '';
+const diffTxt = d => d === 0 ? '±0' : `${d > 0 ? '+' : '−'}${yen(Math.abs(d))}`;
+const dcls = d => d > 0 ? 'up' : d < 0 ? 'down' : '';
+function chartBox() { const n = isNarrow(); return {W: n ? 360 : 1000, H: n ? 230 : 300}; }
+
+function chartMonthly(months) {
+  const {W, H} = chartBox(), L = 40, R = 6, T = 10, B = 34, iw = W - L - R, ih = H - T - B;
+  const ct = months.map(catTotals);
+  const tot = ct.map(o => Object.values(o).reduce((a, b) => a + b, 0));
+  const ly = months.map(m => sumA(recsOf(addM(m, -12))));
+  const lyHas = months.map(m => recsOf(addM(m, -12)).length > 0);
+  const step = niceStep(Math.max(...tot, ...ly, 1) / 4), max = step * 4;
+  const y = v => T + ih - (v / max) * ih, bw = iw / months.length, barW = Math.min(46, bw * 0.62);
+  let g = '';
+  for (let i = 0; i <= 4; i++) g += `<line x1="${L}" x2="${W - R}" y1="${y(step * i)}" y2="${y(step * i)}" class="gl"/><text x="${L - 6}" y="${y(step * i) + 4}" class="ax" text-anchor="end">${shortYen(step * i)}</text>`;
+  months.forEach((m, i) => {
+    const x = L + bw * i + (bw - barW) / 2, sel = m === state.anaSel;
+    let acc = 0, segs = '';
+    CAT_ORDER.forEach(c => {
+      const v = ct[i][c] || 0; if (!v) return;
+      segs += `<rect x="${x.toFixed(1)}" y="${y(acc + v).toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(y(acc) - y(acc + v), 0).toFixed(1)}" style="fill:var(--c-${c})"/>`;
+      acc += v;
+    });
+    g += `<g class="bar-g${sel ? ' sel' : ''}" data-act="ana-sel" data-m="${m}"><title>${mLabel(m)} ${yen(tot[i])}</title><rect x="${(L + bw * i).toFixed(1)}" y="${T}" width="${bw.toFixed(1)}" height="${ih}" class="hit"/>${segs}</g>`;
+    const [yy, mm] = m.split('-'), cx = (L + bw * i + bw / 2).toFixed(1);
+    g += `<text x="${cx}" y="${H - B + 15}" class="ax${sel ? ' axsel' : ''}" text-anchor="middle">${Number(mm)}月</text>`;
+    if (mm === '01' || i === 0) g += `<text x="${cx}" y="${H - 4}" class="ax" text-anchor="middle">${yy}</text>`;
+  });
+  let path = '', pen = false; const pts = [];
+  months.forEach((m, i) => {
+    if (!lyHas[i]) { pen = false; return; }
+    const px = L + bw * i + bw / 2, py = y(ly[i]); pts.push([px, py]);
+    path += `${pen ? 'L' : 'M'}${px.toFixed(1)} ${py.toFixed(1)}`; pen = true;
+  });
+  if (pts.length) g += `<path d="${path}" class="ly"/>` + pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" class="lyd"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="月別の合計金額の推移">${g}</svg>`;
+}
+
+function chartService(s, months) {
+  const {W, H} = chartBox(), L = 40, R = s.unit ? 40 : 6, T = 10, B = 34, iw = W - L - R, ih = H - T - B;
+  const rec = months.map(m => state.records.find(r => r.serviceId === s.id && r.month === m));
+  const amt = rec.map(r => r ? r.amount : 0);
+  const price = rec.map(r => r && s.unit && r.usage > 0 ? r.amount / r.usage : null);
+  const step = niceStep(Math.max(...amt, 1) / 4), max = step * 4;
+  const pv = price.filter(v => v != null);
+  const pstep = niceStep(Math.max(...pv, 1) / 4), pmax = pstep * 4;
+  const y = v => T + ih - (v / max) * ih, yp = v => T + ih - (v / pmax) * ih;
+  const bw = iw / months.length, barW = Math.min(40, bw * 0.55);
+  let g = '';
+  for (let i = 0; i <= 4; i++) {
+    g += `<line x1="${L}" x2="${W - R}" y1="${y(step * i)}" y2="${y(step * i)}" class="gl"/><text x="${L - 6}" y="${y(step * i) + 4}" class="ax" text-anchor="end">${shortYen(step * i)}</text>`;
+    if (pv.length) g += `<text x="${W - R + 6}" y="${yp(pstep * i) + 4}" class="ax">${num(pstep * i)}</text>`;
+  }
+  months.forEach((m, i) => {
+    const cx = L + bw * i + bw / 2;
+    if (amt[i]) g += `<rect x="${(cx - barW / 2).toFixed(1)}" y="${y(amt[i]).toFixed(1)}" width="${barW.toFixed(1)}" height="${(T + ih - y(amt[i])).toFixed(1)}" rx="2" style="fill:var(--c-${s.cat});opacity:.85"><title>${mLabel(m)} ${yen(amt[i])}</title></rect>`;
+    const [yy, mm] = m.split('-');
+    g += `<text x="${cx.toFixed(1)}" y="${H - B + 15}" class="ax" text-anchor="middle">${Number(mm)}月</text>`;
+    if (mm === '01' || i === 0) g += `<text x="${cx.toFixed(1)}" y="${H - 4}" class="ax" text-anchor="middle">${yy}</text>`;
+  });
+  if (pv.length) {
+    let path = '', pen = false; const pts = [];
+    price.forEach((v, i) => {
+      if (v == null) { pen = false; return; }
+      const px = L + bw * i + bw / 2, py = yp(v); pts.push([px, py, v, months[i]]);
+      path += `${pen ? 'L' : 'M'}${px.toFixed(1)} ${py.toFixed(1)}`; pen = true;
+    });
+    g += `<path d="${path}" class="pl"/>` + pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" class="pld"><title>${mLabel(p[3])} 1${esc(s.unit)}あたり ${num(p[2])}円</title></circle>`).join('');
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="${esc(s.name)}の金額の推移">${g}</svg>`;
+}
+
+function viewAna() {
+  if (!state.records.length) {
+    return header('分析', false) + `<div class="empty panel"><p>記録がたまると、ここに月ごとの推移や比較が表示されます。</p><button class="btn primary" data-act="add">記録する</button></div>`;
+  }
+  const now = curMonth();
+  if (state.anaEnd > now) state.anaEnd = now;
+  const months = monthsTo(state.anaEnd, 12);
+  if (!months.includes(state.anaSel)) state.anaSel = state.anaEnd;
+  const totals = months.map(m => sumA(recsOf(m)));
+  const sum12 = totals.reduce((a, b) => a + b, 0);
+  const filled = months.filter((m, i) => recsOf(m).length > 0);
+  const avg = filled.length ? sum12 / filled.length : 0;
+  const maxI = totals.indexOf(Math.max(...totals));
+  const prevMonths = monthsTo(addM(state.anaEnd, -12), 12);
+  const prevSum = prevMonths.reduce((a, m) => a + sumA(recsOf(m)), 0);
+  const prevHas = prevMonths.some(m => recsOf(m).length);
+  const fixed = state.services.filter(s => s.active && s.billing !== 'variable');
+  const fixedMonthly = fixed.reduce((a, s) => a + autoAmount(s), 0);
+
+  // selected month breakdown
+  const sm = state.anaSel, sct = catTotals(sm), pct = catTotals(addM(sm, -1)), yct = catTotals(addM(sm, -12));
+  const hasP = recsOf(addM(sm, -1)).length > 0, hasY = recsOf(addM(sm, -12)).length > 0;
+  const selCats = CAT_ORDER.filter(c => sct[c] || pct[c] || yct[c]);
+  const sTot = sumA(recsOf(sm)), pTot = sumA(recsOf(addM(sm, -1))), yTot = sumA(recsOf(addM(sm, -12)));
+
+  // service trend
+  const withRecs = state.services.filter(s => state.records.some(r => r.serviceId === s.id));
+  if (!withRecs.some(s => s.id === state.anaSvc)) {
+    const pick = withRecs.find(s => s.unit && state.records.some(r => r.serviceId === s.id && r.usage > 0)) || withRecs.find(s => s.billing === 'variable') || withRecs[0];
+    state.anaSvc = pick ? pick.id : null;
+  }
+  const ts = state.anaSvc ? svc(state.anaSvc) : null;
+  let trendStats = '';
+  if (ts && ts.unit) {
+    const pr = months.map(m => state.records.find(r => r.serviceId === ts.id && r.month === m)).filter(r => r && r.usage > 0);
+    if (pr.length) {
+      const last = pr[pr.length - 1], lp = last.amount / last.usage;
+      const tu = pr.reduce((a, r) => a + r.usage, 0), ta = pr.reduce((a, r) => a + r.amount, 0);
+      const ref = state.records.find(r => r.serviceId === ts.id && r.month === addM(last.month, -12) && r.usage > 0);
+      trendStats = `<table class="mini"><tbody>
+        <tr><td>直近の単価（${mLabel(last.month)}）</td><td>${num(lp)} 円/${esc(ts.unit)}</td></tr>
+        <tr><td>期間の平均単価</td><td>${num(ta / tu)} 円/${esc(ts.unit)}</td></tr>
+        ${ref ? `<tr><td>1年前の単価（${mLabel(ref.month)}）</td><td>${num(ref.amount / ref.usage)} 円/${esc(ts.unit)}</td></tr>` : ''}
+        <tr><td>期間の使用量合計</td><td>${num(tu)} ${esc(ts.unit)}</td></tr></tbody></table>`;
+    }
+  }
+
+  // comparison
+  if (!MONTH_RE.test(state.cmpA || '')) state.cmpA = state.anaSel;
+  if (!MONTH_RE.test(state.cmpB || '')) state.cmpB = addM(state.anaSel, -12);
+  const A = state.cmpA, Bm = state.cmpB;
+  const cmpSvcs = state.services.filter(s => state.records.some(r => r.serviceId === s.id && (r.month === A || r.month === Bm)))
+    .sort((a, b) => CAT_ORDER.indexOf(a.cat) - CAT_ORDER.indexOf(b.cat) || a.name.localeCompare(b.name, 'ja'));
+  const amtOf = (sid, m) => { const r = state.records.find(x => x.serviceId === sid && x.month === m); return r ? r.amount : null; };
+  const aTot = sumA(recsOf(A)), bTot = sumA(recsOf(Bm));
+
+  // matrix
+  const usedCats = CAT_ORDER.filter(c => months.some(m => recsOf(m).some(r => svc(r.serviceId).cat === c)));
+  const mct = months.map(catTotals);
+
+  return `
+  <header class="top"><span class="brand">分析</span>
+    <div class="period">
+      <button class="iconbtn" data-act="ana-prev" aria-label="前の12か月"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
+      <b>${mLabel(months[0])}〜${mLabel(months[11])}</b>
+      <button class="iconbtn" data-act="ana-next" aria-label="次の12か月" ${state.anaEnd >= now ? 'disabled' : ''}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></button>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi"><span>12か月の合計</span><b>${yen(sum12)}</b>${prevHas ? `<small class="${dcls(sum12 - prevSum)}">前の12か月 ${pctTxt(sum12, prevSum)}</small>` : '<small>前の12か月の記録なし</small>'}</div>
+    <div class="kpi"><span>月平均</span><b>${yen(avg)}</b><small>記録のある${filled.length}か月で計算</small></div>
+    <div class="kpi"><span>いちばん高かった月</span><b>${yen(totals[maxI])}</b><small>${mLabel(months[maxI])}</small></div>
+    <div class="kpi"><span>固定費（月あたり）</span><b>${yen(fixedMonthly)}</b><small>年間 ${yen(fixedMonthly * 12)}</small></div>
+  </div>
+
+  <div class="ana-grid" style="margin-top:14px">
+    <section class="card span2">
+      <h3>月ごとの推移</h3>
+      <p class="cap">棒をタップすると、その月の内訳を下に表示します。</p>
+      ${chartMonthly(months)}
+      <div class="chart-legend">${CAT_ORDER.filter(c => mct.some(o => o[c])).map(c => `<span><i class="dot" style="background:var(--c-${c})"></i>${CATS[c].label}</span>`).join('')}<span><i class="ln"></i>前年の同じ月</span></div>
+    </section>
+
+    <section class="card">
+      <h3>${mLabel(sm)}の内訳</h3>
+      <p class="cap">前月・前年同月との差</p>
+      <table class="mini">
+        <thead><tr><th>種別</th><th>金額</th><th>前月比</th><th>前年比</th></tr></thead>
+        <tbody>${selCats.map(c => `<tr><td>${CATS[c].label}</td><td>${yen(sct[c] || 0)}</td>
+          <td class="${hasP ? dcls((sct[c] || 0) - (pct[c] || 0)) : ''}">${hasP ? diffTxt((sct[c] || 0) - (pct[c] || 0)) : '—'}</td>
+          <td class="${hasY ? dcls((sct[c] || 0) - (yct[c] || 0)) : ''}">${hasY ? diffTxt((sct[c] || 0) - (yct[c] || 0)) : '—'}</td></tr>`).join('') || '<tr><td colspan="4">この月の記録はありません</td></tr>'}</tbody>
+        <tfoot><tr><td>合計</td><td>${yen(sTot)}</td><td class="${hasP ? dcls(sTot - pTot) : ''}">${hasP ? diffTxt(sTot - pTot) : '—'}</td><td class="${hasY ? dcls(sTot - yTot) : ''}">${hasY ? diffTxt(sTot - yTot) : '—'}</td></tr></tfoot>
+      </table>
+    </section>
+
+    <section class="card">
+      <h3>2つの月を比べる</h3>
+      <p class="cap">サービスごとの差を見られます</p>
+      <div class="inline-fields"><input type="month" id="cmp-a" value="${A}" aria-label="比べる月"><span class="vs">と</span><input type="month" id="cmp-b" value="${Bm}" aria-label="基準の月"></div>
+      <table class="mini">
+        <thead><tr><th>サービス</th><th>${mLabel(A)}</th><th>${mLabel(Bm)}</th><th>差</th></tr></thead>
+        <tbody>${cmpSvcs.map(s => { const a = amtOf(s.id, A), b = amtOf(s.id, Bm); const d = (a || 0) - (b || 0);
+          return `<tr><td>${esc(s.name)}</td><td>${a == null ? '—' : yen(a)}</td><td>${b == null ? '—' : yen(b)}</td><td class="${dcls(d)}">${diffTxt(d)}</td></tr>`; }).join('') || '<tr><td colspan="4">どちらの月にも記録がありません</td></tr>'}</tbody>
+        <tfoot><tr><td>合計</td><td>${yen(aTot)}</td><td>${yen(bTot)}</td><td class="${dcls(aTot - bTot)}">${diffTxt(aTot - bTot)}${bTot ? `<br><small>${pctTxt(aTot, bTot)}</small>` : ''}</td></tr></tfoot>
+      </table>
+    </section>
+
+    <section class="card span2">
+      <h3>サービス別の推移</h3>
+      <p class="cap">${ts && ts.unit ? `棒が金額、線が1${esc(ts.unit)}あたりの単価（右の目盛り）です。単価が上がっていれば、使用量ではなく料金そのものが上がっています。` : '棒が金額です。'}</p>
+      <div class="inline-fields"><select id="ana-svc" aria-label="サービスを選ぶ">${withRecs.map(s => `<option value="${s.id}" ${s.id === state.anaSvc ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div>
+      ${ts ? chartService(ts, months) : ''}
+      ${ts && ts.unit ? `<div class="chart-legend"><span><i class="dot" style="background:var(--c-${ts.cat})"></i>金額</span><span><i class="ln solid"></i>単価（円/${esc(ts.unit)}）</span></div>` : ''}
+      ${trendStats ? `<div style="margin-top:12px;max-width:520px">${trendStats}</div>` : ''}
+    </section>
+
+    <section class="card span2">
+      <h3>月別の一覧</h3>
+      <p class="cap">種別ごとの金額です。横にスクロールできます。</p>
+      <div class="scroll-x"><table class="mx">
+        <thead><tr><th>種別</th>${months.map(m => `<th>${m.endsWith('-01') || m === months[0] ? m.slice(2, 4) + '/' : ''}${Number(m.slice(5))}月</th>`).join('')}<th>合計</th></tr></thead>
+        <tbody>${usedCats.map(c => { const row = mct.map(o => o[c] || 0);
+          return `<tr><td>${CATS[c].label}</td>${row.map(v => `<td class="${v ? '' : 'zero'}">${v ? v.toLocaleString('ja-JP') : '—'}</td>`).join('')}<td>${row.reduce((a, b) => a + b, 0).toLocaleString('ja-JP')}</td></tr>`; }).join('')}
+          <tr class="sum"><td>合計</td>${totals.map(v => `<td>${v ? v.toLocaleString('ja-JP') : '—'}</td>`).join('')}<td>${sum12.toLocaleString('ja-JP')}</td></tr></tbody>
+      </table></div>
+    </section>
+
+    ${fixed.length ? `
+    <section class="card span2">
+      <h3>固定費・サブスク</h3>
+      <p class="cap">契約中のものを月あたりと年間に換算しています</p>
+      <table class="mini">
+        <thead><tr><th>サービス</th><th>支払い</th><th>月あたり</th><th>年間</th></tr></thead>
+        <tbody>${fixed.slice().sort((a, b) => autoAmount(b) - autoAmount(a)).map(s => `<tr><td>${esc(s.name)}</td><td>${s.billing === 'yearly' ? `年額 ${yen(s.fixedAmount)}` : `月額 ${yen(s.fixedAmount)}`}</td><td>${yen(autoAmount(s))}</td><td>${yen(s.billing === 'yearly' ? s.fixedAmount : s.fixedAmount * 12)}</td></tr>`).join('')}</tbody>
+        <tfoot><tr><td>合計</td><td></td><td>${yen(fixedMonthly)}</td><td>${yen(fixed.reduce((a, s) => a + (s.billing === 'yearly' ? s.fixedAmount : s.fixedAmount * 12), 0))}</td></tr></tfoot>
+      </table>
+    </section>` : ''}
+  </div>`;
+}
+
+/* ---------- sheet ---------- */
+let sheetCtx = {};
+function openSheet(html) {
+  $('#sheet').innerHTML = html;
+  $('#sheetWrap').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet() {
+  $('#sheetWrap').hidden = true; $('#sheet').innerHTML = '';
+  document.body.style.overflow = ''; sheetCtx = {};
+}
+
+/* record input */
+function openInput({serviceId = null, recordId = null} = {}) {
+  const rec = recordId ? state.records.find(r => r.id === recordId) : null;
+  const vars = state.services.filter(s => s.billing === 'variable' && s.active);
+  if (!rec && !vars.length) {
+    openSheet(`<h2>料金を記録</h2>
+      <p class="note">毎回金額を入力するサービス（電気・ガス・水道など）がまだ登録されていません。固定額のサブスクは入力しなくても毎月自動で記録されます。</p>
+      <div class="actions"><button class="btn ghost" data-act="close">閉じる</button><button class="btn primary" data-act="new-svc">サービスを追加</button></div>`);
+    return;
+  }
+  const sid = rec ? rec.serviceId : (serviceId || (vars.length === 1 ? vars[0].id : null));
+  sheetCtx = {kind: 'rec', mode: rec ? 'edit' : 'new', recId: rec ? rec.id : null, sid};
+  const s = sid ? svc(sid) : null;
+  openSheet(`
+    <h2>${rec ? '記録を編集' : '料金を記録'}</h2>
+    ${rec ? `<div class="svc-fixed">${ic(s.cat)}${esc(s.name)}</div>` :
+      `<div class="grid">${vars.map(v => `<button class="pick ${v.id === sid ? 'on' : ''}" data-act="pick" data-id="${v.id}">${ic(v.cat)}<span>${esc(v.name)}</span></button>`).join('')}</div>`}
+    ${rec && rec.auto ? '<p class="note">固定費から自動で記録された金額です。変更すると、この月だけの金額として保存されます。</p>' : ''}
+    <p class="hint" id="in-hint"></p>
+    <label class="field"><span id="in-mlabel">対象月（請求書の「○月分」）</span><input type="month" id="in-month" value="${rec ? rec.month : state.month}"></label>
+    <label class="field"><span>金額</span><div class="money big"><span>¥</span><input id="in-amt" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="0" value="${rec ? rec.amount : ''}"></div></label>
+    <label class="field" id="in-usage-f"><span>使用量（任意）</span><div class="unit-in"><input id="in-usage" inputmode="decimal" autocomplete="off" value="${rec && rec.usage != null ? rec.usage : ''}"><span id="in-unit"></span></div></label>
+    ${rec ? '' : '<label class="switch" id="in-bi-f"><input type="checkbox" id="in-bi"><span>2か月分の請求として入力し、1か月ずつに分ける</span></label>'}
+    <label class="field"><span>メモ（任意）</span><input id="in-memo" autocomplete="off" value="${esc(rec ? rec.memo : '')}"></label>
+    <div class="actions">
+      ${rec && !rec.auto ? '<button class="btn danger" data-act="del-rec">削除</button>' : ''}
+      <button class="btn ghost" data-act="close">キャンセル</button>
+      <button class="btn primary" data-act="save-rec">${rec ? '保存する' : '記録する'}</button>
+    </div>`);
+  updateInputFor(sid);
+}
+
+function updateInputFor(sid) {
+  sheetCtx.sid = sid;
+  document.querySelectorAll('.pick').forEach(b => b.classList.toggle('on', b.dataset.id === sid));
+  const s = sid ? svc(sid) : null;
+  const hint = $('#in-hint'), uf = $('#in-usage-f');
+  if (!s) { hint.textContent = 'サービスを選んでください'; uf.hidden = true; return; }
+  uf.hidden = !s.unit; $('#in-unit').textContent = s.unit || '';
+  const last = state.records.filter(r => r.serviceId === sid && r.id !== sheetCtx.recId).sort((a, b) => a.month < b.month ? 1 : -1)[0];
+  hint.innerHTML = last ? `前回（${mLabel(last.month)}）<b>${yen(last.amount)}</b>${last.usage != null && s.unit ? `／<b>${num(last.usage)} ${esc(s.unit)}</b>` : ''}` : '';
+  const bi = $('#in-bi'); if (bi) { bi.checked = !!s.bimonthly; updateBiLabel(); }
+}
+function updateBiLabel() {
+  const bi = $('#in-bi');
+  $('#in-mlabel').textContent = bi && bi.checked ? '請求期間の最初の月' : '対象月（請求書の「○月分」）';
+}
+
+async function saveRec() {
+  const c = sheetCtx, s = svc(c.sid);
+  if (!s) { toast('サービスを選んでください'); return; }
+  const m = $('#in-month').value;
+  if (!MONTH_RE.test(m)) { toast('対象月を選んでください'); return; }
+  const a = $('#in-amt').value.replace(/[,，¥￥\s]/g, '').replace(/[０-９]/g, d => String.fromCharCode(d.charCodeAt(0) - 0xFEE0));
+  if (!/^\d+$/.test(a)) { toast('金額を数字で入力してください'); $('#in-amt').focus(); return; }
+  const amt = parseInt(a, 10);
+  let usage = null;
+  const u = $('#in-usage').value.trim().replace(/,/g, '');
+  if (s.unit && u !== '') { usage = parseFloat(u); if (isNaN(usage)) { toast('使用量を数字で入力してください'); return; } }
+  const memo = $('#in-memo').value.trim();
+  try {
+    if (c.mode === 'edit') {
+      const r = state.records.find(x => x.id === c.recId);
+      const clash = state.records.find(x => x.id !== r.id && x.serviceId === r.serviceId && x.month === m);
+      if (clash) {
+        if (!await askConfirm(`${mLabel(m)}の${s.name}はすでに記録があります。上書きしますか？`, '上書きする')) return;
+        await removeRecords(clash.id);
+      }
+      await saveRecords({...r, month: m, amount: amt, usage, memo, auto: false});
+    } else {
+      const bi = $('#in-bi') && $('#in-bi').checked;
+      const months = bi ? [m, addM(m, 1)] : [m];
+      const clashes = state.records.filter(x => x.serviceId === s.id && months.includes(x.month));
+      if (clashes.length) {
+        if (!await askConfirm(`${months.map(mLabel).join('・')}の${s.name}はすでに記録があります。上書きしますか？`, '上書きする')) return;
+        await removeRecords(clashes.map(x => x.id));
+      }
+      if (bi) {
+        const g = uid(), a1 = Math.ceil(amt / 2);
+        const u1 = usage == null ? null : Math.round(usage / 2 * 10) / 10;
+        const u2 = usage == null ? null : Math.round((usage - u1) * 10) / 10;
+        await saveRecords([
+          {id: uid(), serviceId: s.id, month: months[0], amount: a1, usage: u1, memo, auto: false, group: g},
+          {id: uid(), serviceId: s.id, month: months[1], amount: amt - a1, usage: u2, memo, auto: false, group: g}
+        ]);
+      } else {
+        await saveRecords({id: uid(), serviceId: s.id, month: m, amount: amt, usage, memo, auto: false, group: null});
+      }
+    }
+  } catch (e) { toast('保存に失敗しました'); return; }
+  closeSheet();
+  state.tab = 'home'; state.month = m > curMonth() ? curMonth() : m;
+  render(); toast(c.mode === 'edit' ? '保存しました' : '記録しました');
+}
+
+async function delRec() {
+  const r = state.records.find(x => x.id === sheetCtx.recId); if (!r) return;
+  const grp = r.group ? state.records.filter(x => x.group === r.group) : [r];
+  const msg = grp.length > 1 ? '2か月分として入力した記録です。2か月分をまとめて削除しますか？' : 'この記録を削除しますか？';
+  if (!await askConfirm(msg, '削除する', true)) return;
+  try { await removeRecords(grp.map(x => x.id)); } catch (e) { toast('削除に失敗しました'); return; }
+  await syncAuto().catch(() => {});
+  closeSheet(); render(); toast('削除しました');
+}
+
+/* service form */
+function openServiceForm(id) {
+  const s = id ? svc(id) : {name: '', cat: 'elec', billing: 'variable', fixedAmount: '', renewDate: '', startMonth: curMonth(), unit: 'kWh', bimonthly: false, payment: '', active: true};
+  sheetCtx = {kind: 'svc', id: id || null, unitTouched: !!id};
+  openSheet(`
+    <h2>${id ? 'サービスを編集' : 'サービスを追加'}</h2>
+    <label class="field"><span>名前</span><input id="sf-name" autocomplete="off" placeholder="例：東京電力、Netflix" value="${esc(s.name)}"></label>
+    <div class="field"><span>種別</span><div class="chips">${CAT_ORDER.map(c => `<label class="chip"><input type="radio" name="sf-cat" value="${c}" ${s.cat === c ? 'checked' : ''}><span>${svg(c, 16)}${CATS[c].label}</span></label>`).join('')}</div></div>
+    <div class="field"><span>料金のタイプ</span><div class="seg">${Object.entries(BILLING).map(([k, v]) => `<label><input type="radio" name="sf-bill" value="${k}" ${s.billing === k ? 'checked' : ''}><span>${v}</span></label>`).join('')}</div></div>
+    <div data-show="fixed">
+      <label class="field"><span id="sf-amt-l">金額</span><div class="money"><span>¥</span><input id="sf-amt" inputmode="numeric" pattern="[0-9]*" autocomplete="off" value="${s.fixedAmount || ''}"></div></label>
+      <label class="field" data-show="yearly"><span>次の更新日（任意）</span><input type="date" id="sf-renew" value="${esc(s.renewDate || '')}"></label>
+      <label class="field"><span>記録を始める月</span><input type="month" id="sf-start" value="${esc(s.startMonth || curMonth())}"></label>
+    </div>
+    <div data-show="variable">
+      <label class="field"><span>使用量の単位</span><select id="sf-unit">${UNITS.map(u => `<option value="${u}" ${(s.unit || '') === u ? 'selected' : ''}>${u || '使用量は記録しない'}</option>`).join('')}</select></label>
+      <label class="switch"><input type="checkbox" id="sf-bi" ${s.bimonthly ? 'checked' : ''}><span>2か月ごとに請求される（水道など）</span></label>
+    </div>
+    <label class="field"><span>支払方法（任意）</span><input id="sf-pay" autocomplete="off" placeholder="例：クレジットカード、口座振替" value="${esc(s.payment || '')}"></label>
+    ${id ? `<label class="switch"><input type="checkbox" id="sf-active" ${s.active ? 'checked' : ''}><span>契約中（オフにすると、記録を残したまま自動記録を止めます）</span></label>` : ''}
+    <div class="actions">
+      ${id ? '<button class="btn danger" data-act="del-svc">削除</button>' : ''}
+      <button class="btn ghost" data-act="close">キャンセル</button>
+      <button class="btn primary" data-act="save-svc">${id ? '保存する' : '追加する'}</button>
+    </div>`);
+  updateSvcForm();
+}
+const radioVal = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : null; };
+function updateSvcForm(changed) {
+  if (changed && changed.name === 'sf-cat' && !sheetCtx.id) {
+    const cat = changed.value;
+    if (!sheetCtx.unitTouched) $('#sf-unit').value = CATS[cat].unit;
+    if (cat === 'sub' && radioVal('sf-bill') === 'variable') document.querySelector('input[name="sf-bill"][value="monthly"]').checked = true;
+  }
+  const b = radioVal('sf-bill');
+  document.querySelectorAll('[data-show="fixed"]').forEach(el => el.hidden = b === 'variable');
+  document.querySelectorAll('[data-show="yearly"]').forEach(el => el.hidden = b !== 'yearly');
+  document.querySelectorAll('[data-show="variable"]').forEach(el => el.hidden = b !== 'variable');
+  const l = $('#sf-amt-l'); if (l) l.textContent = b === 'yearly' ? '年額' : '毎月の金額';
+}
+
+async function saveSvc() {
+  const name = $('#sf-name').value.trim();
+  if (!name) { toast('名前を入力してください'); $('#sf-name').focus(); return; }
+  const cat = radioVal('sf-cat') || 'other', billing = radioVal('sf-bill') || 'variable';
+  let fixedAmount = 0;
+  if (billing !== 'variable') {
+    const a = $('#sf-amt').value.replace(/[,，¥￥\s]/g, '');
+    if (!/^\d+$/.test(a) || +a <= 0) { toast('金額を入力してください'); $('#sf-amt').focus(); return; }
+    fixedAmount = +a;
+  }
+  const start = $('#sf-start').value;
+  if (billing !== 'variable' && !MONTH_RE.test(start)) { toast('記録を始める月を選んでください'); return; }
+  const prev = sheetCtx.id ? svc(sheetCtx.id) : null;
+  const active = prev ? $('#sf-active').checked : true;
+  const s = {
+    ...(prev || {}),
+    id: prev ? prev.id : uid(), name, cat, billing, fixedAmount,
+    renewDate: billing === 'yearly' ? $('#sf-renew').value : '',
+    startMonth: billing === 'variable' ? ((prev && prev.startMonth) || curMonth()) : start,
+    unit: billing === 'variable' ? $('#sf-unit').value : '',
+    bimonthly: billing === 'variable' && $('#sf-bi').checked,
+    payment: $('#sf-pay').value.trim(),
+    active,
+    endMonth: active ? null : (prev && !prev.active && prev.endMonth ? prev.endMonth : curMonth()),
+    createdAt: (prev && prev.createdAt) || new Date().toISOString()
+  };
+  try { await saveServices(s); await syncAuto(); } catch (e) { toast('保存に失敗しました'); return; }
+  closeSheet(); render(); toast(prev ? '保存しました' : '追加しました');
+}
+
+async function delSvc() {
+  const s = svc(sheetCtx.id); if (!s) return;
+  const n = state.records.filter(r => r.serviceId === s.id).length;
+  if (!await askConfirm(`「${s.name}」と、その記録${n}件をすべて削除します。記録を残したい場合は「契約中」をオフにしてください。`, '削除する', true)) return;
+  try { await removeService(s.id); } catch (e) { toast('削除に失敗しました'); return; }
+  closeSheet(); render(); toast('削除しました');
+}
+
+async function addPresets() {
+  const now = curMonth();
+  const list = PRESETS.map(p => ({id: uid(), name: p.name, cat: p.cat, billing: 'variable', fixedAmount: 0, renewDate: '', startMonth: now, unit: p.unit, bimonthly: !!p.bimonthly, payment: '', active: true, endMonth: null, createdAt: new Date().toISOString()}));
+  try { await saveServices(list); } catch (e) { toast('保存に失敗しました'); return; }
+  closeSheet(); render(); toast('5件を追加しました。名前は管理画面で変えられます');
+}
+
+/* ---------- export / import ---------- */
+let dl = null;
+try { if (window.claude && typeof window.claude.use === 'function') window.claude.use('downloads').then(x => { dl = x; }).catch(() => {}); } catch (e) {}
+
+function markExported() { const d = new Date(); lsSet('koteihi:lastExport', `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`); if (state.tab === 'data') render(); }
+
+async function exportData() {
+  const payload = JSON.stringify({app: 'kurashi-koteihi', version: 1, exportedAt: new Date().toISOString(), services: state.services, records: state.records}, null, 1);
+  const filename = `koteihi-${todayStr()}.json`;
+  if (dl) {
+    try { await dl.save({filename, data: payload}); markExported(); toast('書き出しました'); }
+    catch (e) { if (e && e.code !== 'declined') toast('書き出せませんでした'); }
+    return;
+  }
+  const file = new File([payload], filename, {type: 'application/json'});
+  if (navigator.canShare && navigator.canShare({files: [file]})) {
+    try { await navigator.share({files: [file], title: filename}); markExported(); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file); a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  markExported();
+}
+
+async function importData(file) {
+  if (!file) return;
+  let obj;
+  try { obj = JSON.parse(await file.text()); } catch (e) { toast('ファイルを読み取れませんでした'); return; }
+  const ok = obj && obj.app === 'kurashi-koteihi' && Array.isArray(obj.services) && Array.isArray(obj.records)
+    && obj.services.every(s => s && typeof s.id === 'string' && typeof s.name === 'string')
+    && obj.records.every(r => r && typeof r.id === 'string' && typeof r.serviceId === 'string' && MONTH_RE.test(r.month) && typeof r.amount === 'number');
+  if (!ok) { toast('このツールで書き出したファイルではありません'); return; }
+  if (!await askConfirm(`サービス${obj.services.length}件・記録${obj.records.length}件を読み込みます。この端末の今のデータは置き換わります。`, '読み込む', true)) return;
+  try {
+    await dbClear('services'); await dbClear('records');
+    state.services = []; state.records = [];
+    await saveServices(obj.services.map(s => ({...s, cat: CATS[s.cat] ? s.cat : 'other'})));
+    await saveRecords(obj.records);
+    await syncAuto();
+  } catch (e) { toast('読み込みに失敗しました'); return; }
+  state.month = curMonth(); render(); toast('読み込みました');
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  switch (b.dataset.act) {
+    case 'tab': state.tab = b.dataset.tab; if (state.tab === 'home') state.month = state.month || curMonth(); render(); window.scrollTo(0, 0); break;
+    case 'ana-prev': state.anaEnd = addM(state.anaEnd, -12); state.anaSel = state.anaEnd; state.cmpA = state.cmpB = null; render(); break;
+    case 'ana-next': { const n = addM(state.anaEnd, 12); state.anaEnd = n > curMonth() ? curMonth() : n; state.anaSel = state.anaEnd; state.cmpA = state.cmpB = null; render(); break; }
+    case 'ana-sel': state.anaSel = b.dataset.m; state.cmpA = state.cmpB = null; render(); break;
+    case 'mprev': state.month = addM(state.month, -1); render(); break;
+    case 'mnext': if (state.month < curMonth()) { state.month = addM(state.month, 1); render(); } break;
+    case 'add': openInput({serviceId: b.dataset.svc || null}); break;
+    case 'pick': updateInputFor(b.dataset.id); break;
+    case 'edit-rec': openInput({recordId: b.dataset.id}); break;
+    case 'save-rec': saveRec(); break;
+    case 'del-rec': delRec(); break;
+    case 'new-svc': openServiceForm(null); break;
+    case 'edit-svc': openServiceForm(b.dataset.id); break;
+    case 'save-svc': saveSvc(); break;
+    case 'del-svc': delSvc(); break;
+    case 'presets': addPresets(); break;
+    case 'export': exportData(); break;
+    case 'import': $('#importFile').value = ''; $('#importFile').click(); break;
+    case 'close': closeSheet(); break;
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.name === 'sf-bill' || t.name === 'sf-cat') updateSvcForm(t);
+  else if (t.id === 'sf-unit') sheetCtx.unitTouched = true;
+  else if (t.id === 'in-bi') updateBiLabel();
+  else if (t.id === 'cmp-a' && MONTH_RE.test(t.value)) { state.cmpA = t.value; render(); }
+  else if (t.id === 'cmp-b' && MONTH_RE.test(t.value)) { state.cmpB = t.value; render(); }
+  else if (t.id === 'ana-svc') { state.anaSvc = t.value; render(); }
+  else if (t.id === 'importFile') importData(t.files && t.files[0]);
+});
+let rsT;
+window.addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(() => { if (state.tab === 'ana' && isNarrow() !== lastNarrow && $('#sheetWrap').hidden) render(); }, 200); });
+$('#sheetWrap').addEventListener('click', e => { if (e.target.id === 'sheetWrap') closeSheet(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('#confirmWrap').hidden) $('#confirmNo').click();
+  else if (!$('#sheetWrap').hidden) closeSheet();
+});
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') { await syncAuto().catch(() => {}); if ($('#sheetWrap').hidden) render(); }
+});
+
+/* ---------- init ---------- */
+(async function init() {
+  render();
+  try { idb = await openDB(); } catch (e) { memOnly = true; }
+  try { state.services = await dbGetAll('services'); state.records = await dbGetAll('records'); } catch (e) { memOnly = true; }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  await syncAuto().catch(() => {});
+  render();
+})();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
