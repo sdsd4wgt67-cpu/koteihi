@@ -1,6 +1,6 @@
 // くらしの固定費帳 service worker
 // アプリを更新したら VERSION の数字を上げると、各端末のキャッシュが入れ替わります。
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'koteihi-' + VERSION;
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
